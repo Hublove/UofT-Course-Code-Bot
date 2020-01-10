@@ -2,54 +2,58 @@
 #!/usr/bin/python
 import praw
 import re
-import os
 import json
+import atexit
+import os
+
 
 
 reddit = praw.Reddit('bot1')
 
-subreddit = reddit.subreddit("uoft")
-
-
-with open('courses.json', 'r', errors='ignore') as json_file:
-    json_course = json_file.readline()
-    while json_course:
-        course = json.loads(json_course)
-        print(course['code'])
-        json_course = json_file.readline()
+subreddit = reddit.subreddit("pythonforengineers")
 
 
 # Have we run this code before? If not, create an empty list
-if not os.path.isfile("posts_replied_to.txt"):
-    posts_replied_to = []
+if not os.path.isfile("comments_replied_to.txt"):
+    comments_replied_to = []
 
 # If we have run the code before, load the list of posts we have replied to
 else:
     # Read the file into a list and remove any empty values
-    with open("posts_replied_to.txt", "r") as f:
-        posts_replied_to = f.read()
-        posts_replied_to = posts_replied_to.split("\n")
-        posts_replied_to = list(filter(None, posts_replied_to))
+    with open("comments_replied_to.txt", "r") as f:
+        comments_replied_to = f.read()
+        comments_replied_to = comments_replied_to.split("\n")
+        comments_replied_to = list(filter(None, comments_replied_to))
+
+def exit_handler():
+    # Write our updated list back to the file
+    with open("comments_replied_to.txt", "w") as f:
+        for comment_id in comments_replied_to:
+            f.write(comment_id + "\n")
+
+atexit.register(exit_handler)
 
 
+comments = subreddit.stream.comments()
 
-for submission in subreddit.hot(limit=50):
-    # If we haven't replied to this post before
-    if submission.id not in posts_replied_to:
+for comment in comments:
+     # If we haven't replied to this post before
+    if comment.id not in comments_replied_to:
+        # Do a case insensitive search for the bot
+        match = re.search("^\/u\/UofT-Bot \w*$", comment.body, re.IGNORECASE)
+        if match:
+            #Get the course code from the comment
+            split_comment = re.split("\s", comment.body)
+            with open('courses.json', 'r', errors='ignore') as json_file:
+                json_course = json_file.readline()
+                while json_course:
+                    course = json.loads(json_course)
+                    if re.search(split_comment[1], course['code'], re.IGNORECASE):
+                        comment.reply(course['code'] + " - " + course["description"])
+                        comments_replied_to.append(comment.id)
+                        print("Replied!")
+                        break
+                    else:
+                        json_course = json_file.readline()            
 
-        # Do a case insensitive search
-        if re.search("csc", submission.title, re.IGNORECASE):
-            # Reply to the post
-            #submission.reply("Nigerian scammer bot says: It's all about the Bass (and Python)")
-            
-            print("Bot replying to : ", submission.title)
 
-            # Store the current id into our list
-            posts_replied_to.append(submission.id)
-
-
-
-# Write our updated list back to the file
-with open("posts_replied_to.txt", "w") as f:
-    for post_id in posts_replied_to:
-        f.write(post_id + "\n")
