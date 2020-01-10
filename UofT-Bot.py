@@ -11,7 +11,7 @@ reddit = praw.Reddit('bot1')
 subreddit = reddit.subreddit("uoft")
 
 
-with open('courses.json', 'r') as json_file:
+with open('courses.json', 'r', errors='ignore') as json_file:
     json_course = json_file.readline()
     while json_course:
         course = json.loads(json_course)
