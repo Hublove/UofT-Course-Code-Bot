@@ -10,7 +10,7 @@ import os
 
 reddit = praw.Reddit('bot1')
 
-subreddit = reddit.subreddit("pythonforengineers")
+subreddit = reddit.subreddit("uoft")
 
 
 # Have we run this code before? If not, create an empty list
