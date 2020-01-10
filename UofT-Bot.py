@@ -1,21 +1,22 @@
 
 #!/usr/bin/python
 import praw
-#import pdb
 import re
 import os
 import json
-#import requests
 
 
 reddit = praw.Reddit('bot1')
 
 subreddit = reddit.subreddit("uoft")
 
-with open('courses.json', 'r') as json_file:
-    course = json.loads(json_file.readline())
-    print(course['code'])
 
+with open('courses.json', 'r') as json_file:
+    json_course = json_file.readline()
+    while json_course:
+        course = json.loads(json_course)
+        print(course['code'])
+        json_course = json_file.readline()
 
 
 # Have we run this code before? If not, create an empty list
@@ -32,7 +33,6 @@ else:
 
 
 
-
 for submission in subreddit.hot(limit=50):
     # If we haven't replied to this post before
     if submission.id not in posts_replied_to:
@@ -41,11 +41,11 @@ for submission in subreddit.hot(limit=50):
         if re.search("csc", submission.title, re.IGNORECASE):
             # Reply to the post
             #submission.reply("Nigerian scammer bot says: It's all about the Bass (and Python)")
+            
             print("Bot replying to : ", submission.title)
 
             # Store the current id into our list
             posts_replied_to.append(submission.id)
-
 
 
 
