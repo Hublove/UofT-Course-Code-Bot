@@ -10,7 +10,7 @@ import os
 
 reddit = praw.Reddit('bot1')
 
-subreddit = reddit.subreddit("uoft")
+subreddit = reddit.subreddit("pythonforengineers")
 
 
 # Have we run this code before? If not, create an empty list
@@ -33,7 +33,6 @@ def exit_handler():
 
 atexit.register(exit_handler)
 
-
 comments = subreddit.stream.comments()
 
 for comment in comments:
@@ -44,16 +43,26 @@ for comment in comments:
         if match:
             #Get the course code from the comment
             split_comment = re.split("\s", comment.body)
+            #Search for the course
             with open('courses.json', 'r', errors='ignore') as json_file:
                 json_course = json_file.readline()
-                while json_course:
+                while json_course:                      
+
                     course = json.loads(json_course)
                     if re.search(split_comment[1], course['code'], re.IGNORECASE):
-                        comment.reply(course['code'] + " - " + course["description"])
+                        #comment.reply("Im a bot beep boop\n" + course['code'] + " - " + course["description"])
                         comments_replied_to.append(comment.id)
+                        print("Im a bot beep boop\n" + course['code'] + " - " + course['name'] + "\n" + course["description"])
                         print("Replied!")
                         break
                     else:
-                        json_course = json_file.readline()            
+                        json_course = json_file.readline()
+
+                if json_course == "":
+                    print("Sorry I couldn't find that course")
+                    comment.reply("Couldn't find that course. Sad beep boop.")
+                    comments_replied_to.append(comment.id) 
+            
+                     
 
 
